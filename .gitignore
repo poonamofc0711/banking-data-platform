@@ -216,3 +216,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Security — never commit secrets
+*.env
+secrets.py
+**/credentials.json
+**/*_key.txt
+.databricks/
+config/local_settings.py
+__pycache__/
+*.pyc
