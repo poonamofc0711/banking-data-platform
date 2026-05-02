@@ -1,0 +1,15 @@
+{
+	"name": "banking-adf-poonam",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Enabled",
+			"editable": true
+		}
+	},
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "f8e1e6ec-cb7a-4897-859c-6c41b1c0f526",
+		"tenantId": "6a658321-f9c2-43f6-8c55-16b789fd57e3"
+	}
+}
