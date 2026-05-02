@@ -1,0 +1,65 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - README.md
+      - docs/*
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  pythonVersion: '3.10'
+
+stages:
+
+- stage: Validate
+  displayName: 'Code Validation'
+  jobs:
+  - job: QualityChecks
+    displayName: 'Quality Checks'
+    steps:
+
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: $(pythonVersion)
+      displayName: 'Use Python $(pythonVersion)'
+
+    - script: |
+        pip install pyspark==3.4.0 delta-spark==2.4.0 pytest flake8
+        echo "All dependencies installed"
+      displayName: 'Install dependencies'
+
+    - script: |
+        flake8 databricks/ \
+          --max-line-length=120 \
+          --ignore=E501,W503 \
+          --exclude=.git,__pycache__
+        echo "Code linting passed"
+      displayName: 'Lint PySpark code'
+
+    - script: |
+        if [ -d "data_quality/tests" ] && \
+           [ "$(ls -A data_quality/tests 2>/dev/null)" ]; then
+          pytest data_quality/tests/ -v --tb=short
+        else
+          echo "No tests yet — skipping"
+        fi
+      displayName: 'Run unit tests'
+
+- stage: Summary
+  displayName: 'Pipeline Summary'
+  dependsOn: Validate
+  condition: always()
+  jobs:
+  - job: PrintSummary
+    steps:
+    - script: |
+        echo "=============================="
+        echo "Build: $(Build.BuildNumber)"
+        echo "Branch: $(Build.SourceBranchName)"
+        echo "Commit: $(Build.SourceVersion)"
+        echo "=============================="
+      displayName: 'Print build summary'
