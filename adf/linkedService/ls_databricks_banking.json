@@ -12,9 +12,9 @@
 					"type": "LinkedServiceReference"
 				},
 				"secretName": "databricks-token",
-				"secretVersion": "1e5fdfd1e7eb4bc6a3dbc8cefe5f760a"
+				"secretVersion": "ad4e2e46a2164650a0bf6ec00dd9f4e3"
 			},
-			"existingClusterId": "banking-cluster"
+			"existingClusterId": "0430-221045-x0d6v2l3"
 		}
 	},
 	"type": "Microsoft.DataFactory/factories/linkedservices"
