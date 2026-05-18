@@ -1,13 +1,21 @@
 {
 	"name": "ls_databricks_banking",
-	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"annotations": [],
 		"type": "AzureDatabricks",
 		"typeProperties": {
 			"domain": "https://adb-7405617027258960.0.azuredatabricks.net",
-			"existingClusterId": "banking-cluster",
-			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQEU1OTIxRjcyLUU5QjYtNEVFRC1CRjU5LTZGM0NFNUU0MTZFM19hNmQ1MGEyYS0yZTQyLTRhZDctYTA2My0yMjQzODFhNTIxZmMiDQp9"
+			"accessToken": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_keyvault_banking",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "databricks-token",
+				"secretVersion": "1e5fdfd1e7eb4bc6a3dbc8cefe5f760a"
+			},
+			"existingClusterId": "banking-cluster"
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
 }
