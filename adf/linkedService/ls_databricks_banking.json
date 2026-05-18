@@ -1,0 +1,7 @@
+{
+	"name": "ls_databricks_banking",
+	"properties": {
+		"annotations": [],
+		"type": "Databricks"
+	}
+}
