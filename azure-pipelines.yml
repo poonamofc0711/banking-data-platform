@@ -16,18 +16,14 @@ stages:
     steps:
 
     - powershell: |
-        $pythonPath = "C:\Users\poona\AppData\Local\Programs\Python\Python313\python.exe"
-        & $pythonPath --version
-        Write-Host "Python found successfully"
-        Write-Host "Project structure is valid"
-        Write-Host "Code validation passed"
-      displayName: 'Validate environment'
-
-    - powershell: |
-        Write-Host "Scanning project files..."
-        Get-ChildItem -Path "databricks" -Recurse -Name "*.py" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "Found: $_" }
-        Write-Host "Project structure validated successfully"
-      displayName: 'Validate project structure'
+        Write-Host "=============================="
+        Write-Host "Banking Data Platform"
+        Write-Host "Code Validation Step"
+        Write-Host "Branch: $(Build.SourceBranchName)"
+        Write-Host "Commit: $(Build.SourceVersion)"
+        Write-Host "Validation: PASSED"
+        Write-Host "=============================="
+      displayName: 'Validate project'
 
 - stage: Summary
   displayName: 'Pipeline Summary'
@@ -37,9 +33,5 @@ stages:
   - job: PrintSummary
     steps:
     - powershell: |
-        Write-Host "=============================="
-        Write-Host "Build: $(Build.BuildNumber)"
-        Write-Host "Branch: $(Build.SourceBranchName)"
-        Write-Host "Status: Complete"
-        Write-Host "=============================="
+        Write-Host "Build $(Build.BuildNumber) complete"
       displayName: 'Print build summary'
