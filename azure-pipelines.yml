@@ -19,19 +19,19 @@ stages:
     displayName: 'Quality Checks'
     steps:
 
-    - script: |
+    - powershell: |
         python --version
         pip install pyspark==3.4.0 delta-spark==2.4.0 pytest flake8
-        echo "All dependencies installed"
+        Write-Host "All dependencies installed"
       displayName: 'Install dependencies'
 
-    - script: |
+    - powershell: |
         flake8 databricks/ --max-line-length=120 --ignore=E501,W503 --exclude=.git,__pycache__
-        echo "Code linting passed"
+        Write-Host "Code linting passed"
       displayName: 'Lint PySpark code'
 
-    - script: |
-        echo "No tests yet — skipping"
+    - powershell: |
+        Write-Host "No tests yet - skipping"
       displayName: 'Run unit tests'
 
 - stage: Summary
@@ -41,7 +41,7 @@ stages:
   jobs:
   - job: PrintSummary
     steps:
-    - script: |
-        echo "Build complete"
-        echo "Branch: $(Build.SourceBranchName)"
+    - powershell: |
+        Write-Host "Build complete"
+        Write-Host "Branch: $(Build.SourceBranchName)"
       displayName: 'Print build summary'
