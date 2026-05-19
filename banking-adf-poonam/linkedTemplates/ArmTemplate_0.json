@@ -1,0 +1,225 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "banking-adf-poonam"
+		},
+		"ls_adls_banking_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_adls_banking'"
+		},
+		"ls_adls_banking_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://bankingdatalakepn.dfs.core.windows.net/"
+		},
+		"ls_keyvault_banking_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://banking-kv-poonam.vault.azure.net/"
+		},
+		"ls_databricks_banking_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0430-221045-x0d6v2l3"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_adls_banking')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_adls_banking_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ls_adls_banking_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_keyvault_banking')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('ls_keyvault_banking_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_databricks_banking')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-7405617027258960.0.azuredatabricks.net",
+					"accessToken": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_keyvault_banking",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "databricks-token",
+						"secretVersion": "ad4e2e46a2164650a0bf6ec00dd9f4e3"
+					},
+					"existingClusterId": "[parameters('ls_databricks_banking_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_keyvault_banking')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_banking_medallion_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Bronze_Ingestion",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/poonamofc0711@gmail.com/01_data_generation_bronze"
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_databricks_banking",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Silver_Transformation",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "Bronze_Ingestion",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/poonamofc0711@gmail.com/02_silver_transformation"
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_databricks_banking",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Gold_Aggregations",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "Silver_Transformation",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/poonamofc0711@gmail.com/03_gold_aggregations"
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_databricks_banking",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"batch_id": {
+						"type": "string",
+						"defaultValue": "BATCH_001"
+					},
+					"environment": {
+						"type": "string",
+						"defaultValue": "dev"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_databricks_banking')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/daily_banking_trigger')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_banking_medallion_pipeline",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 15,
+						"startTime": "2026-05-18T00:04:00",
+						"timeZone": "US Mountain Standard Time",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								6
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_banking_medallion_pipeline')]"
+			]
+		}
+	]
+}
