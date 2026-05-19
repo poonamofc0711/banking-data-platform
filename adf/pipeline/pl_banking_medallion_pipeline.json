@@ -1,0 +1,92 @@
+{
+	"name": "pl_banking_medallion_pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "Bronze_Ingestion",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/poonamofc0711@gmail.com/01_data_generation_bronze"
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_databricks_banking",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Silver_Transformation",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "Bronze_Ingestion",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/poonamofc0711@gmail.com/02_silver_transformation"
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_databricks_banking",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Gold_Aggregations",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "Silver_Transformation",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/poonamofc0711@gmail.com/03_gold_aggregations"
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_databricks_banking",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"batch_id": {
+				"type": "string",
+				"defaultValue": "BATCH_001"
+			},
+			"environment": {
+				"type": "string",
+				"defaultValue": "dev"
+			}
+		},
+		"annotations": []
+	}
+}
